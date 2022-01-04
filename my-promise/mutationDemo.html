@@ -1,0 +1,32 @@
+<!--
+ * @Author: luoxi
+ * @LastEditTime: 2022-01-04 21:48:48
+ * @LastEditors: your name
+ * @Description: 浏览器环境实现微队列思路
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        const p = document.createElement('p')
+        setTimeout(function() {
+            console.log('1')
+        })
+        const observer = new MutationObserver(function(){
+            console.log('变化了')
+        })
+        observer.observe(p,{
+            childList:true,// 观察改元素内部的变化
+        })
+        p.innerHTML = '1'
+        console.log('2')
+    </script>
+    
+</body>
+</html>
