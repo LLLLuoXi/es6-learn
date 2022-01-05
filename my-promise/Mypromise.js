@@ -1,6 +1,6 @@
 /*
  * @Author: luoxi
- * @LastEditTime: 2022-01-04 22:53:52
+ * @LastEditTime: 2022-01-05 23:51:03
  * @LastEditors: your name
  * @Description: 手写promise A+规范
  */
@@ -39,7 +39,7 @@ class MyPromise {
   constructor(executor) {
     this._state = PENDING; //状态
     this._value = undefined; //数据
-    this._handler = []; //处理函数形成的队列
+    this._handlers = []; //处理函数形成的队列
     try {
       executor(this._rosolve.bind(this), this._reject.bind(this));
     } catch (error) {
@@ -55,13 +55,38 @@ class MyPromise {
    * @return {*}
    */
   _pushHandler(executor, state, resolve, reject) {
-    this._handler.push({
+    this._handlers.push({
       executor,
       state,
       resolve,
       reject,
     });
   }
+  /**
+   * @description: 根据实际情况，执行队列
+   * @return {*}
+   */
+  _runHandlers() {
+    if (this._state === PENDING) {
+      //目前任务仍在挂起
+      return;
+    }
+    console.log(`处理${this._handlers.length}函数`);
+    while (this._handlers[0]) {
+      const handler = this._handlers[0];
+      this._runOneHandler(handler);
+      this._handlers.shift();
+    }
+    // for (const handler of this._handlers) {
+    //   this._runOneHandler(handler);
+    // }
+  }
+  /**
+   * @description: 处理一个handler
+   * @param {*Object} handler
+   * @return {*}
+   */
+  _runOneHandler(handler) {}
   /**
    * @description: PromiseA+ 规范里的then
    * @param {*Function} onFulfilled
@@ -72,6 +97,7 @@ class MyPromise {
     return new MyPromise((resolve, reject) => {
       this._pushHandler(onFulfilled, FULFILLED, resolve, reject);
       this._pushHandler(onRejected, REJECTED, resolve, reject);
+      this._runHandlers(); //执行队列
     });
   }
   /**
@@ -81,12 +107,14 @@ class MyPromise {
    * @return {*}
    */
   _changeState(newState, value) {
+    console.log("changeState");
     if (this._state !== PENDING) {
       // 目前状态已经更改
       return;
     }
     this._state = newState;
     this._value = value;
+    this._runHandlers(); //状态改变，执行队列
   }
   /**
    * @description: 标记当前任务完成
@@ -108,17 +136,21 @@ class MyPromise {
 const pro = new MyPromise((resolve, reject) => {
   setTimeout(() => {
     resolve(1);
-  }, 1000);
- 
-  // throw new Error(123);
+  });
 });
-pro.then(
-  function A1() {},
-  // function A2() {}
-);
-pro.then(
-  function B1() {},
-  function B2() {}
-);
+pro.then(function A1() {});
+setTimeout(() => {
+  pro.then(function A2() {});
+});
 
 console.log(pro);
+
+// const pro1 = new Promise((resolve, reject) => {
+//   setTimeout(() => {
+//     resolve(1);
+//   });
+// });
+// pro1.then(function A1() {console.log('A1')});
+// setTimeout(() => {
+//   pro1.then(function A2() {console.log('A2')});
+// });
