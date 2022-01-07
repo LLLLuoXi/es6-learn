@@ -1,6 +1,6 @@
 /*
  * @Author: luoxi
- * @LastEditTime: 2022-01-05 23:51:03
+ * @LastEditTime: 2022-01-07 23:07:31
  * @LastEditors: your name
  * @Description: 手写promise A+规范
  */
@@ -29,6 +29,18 @@ function runMicroTask(callback) {
     //其他环境
     setTimeout(callback, 0);
   }
+}
+
+/**
+ * @description: 判断一个数据是否是Promise对象
+ * @param {*} 
+ * @return {*} true or false
+ * 不用能 instanceof 来判断 ，因为只要满足PromiseA+规范 ，那么他就是一个promise，并不一定是ES6的promise
+ */
+function isPromise(obj){
+  // 必须是个对象，并且有then方法 就是promise
+  return !!(obj && typeof obj === 'object' && typeof obj.then === 'function')
+
 }
 class MyPromise {
   /**
@@ -71,7 +83,8 @@ class MyPromise {
       //目前任务仍在挂起
       return;
     }
-    console.log(`处理${this._handlers.length}函数`);
+    // console.log(`处理${this._handlers.length}个函数`);
+    // console.log(this._handlers);
     while (this._handlers[0]) {
       const handler = this._handlers[0];
       this._runOneHandler(handler);
@@ -83,10 +96,33 @@ class MyPromise {
   }
   /**
    * @description: 处理一个handler
-   * @param {*Object} handler
+   * @param {*Object} handler 队列中的对象 {executor: [Function: A1],state: 'fulfilled',resolve: [Function: bound _rosolve],reject: [Function: bound _reject]}
+   * 这里的state指的是执行时机，当state的时候执行executor函数，如果状态不一致则不执行executor
    * @return {*}
    */
-  _runOneHandler(handler) {}
+  _runOneHandler({ executor, state, resolve, reject }) {
+    runMicroTask(() => {
+      if (this._state !== state) {
+        //状态不一致
+        return;
+      }
+      if (typeof executor !== "function") {
+        //传递后续处理不是一个函数（无效或者没有传递），接受的状态和上一个promise一致（穿透）
+        this._state === FULFILLED ? resolve(this._value) : reject(this._value);
+        return;
+      }
+      try {
+        const result = executor(this._value);
+        if(isPromise(result)) {
+          result.then(resolve, reject);
+        }else{
+          resolve(result);
+        }
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
   /**
    * @description: PromiseA+ 规范里的then
    * @param {*Function} onFulfilled
@@ -107,7 +143,7 @@ class MyPromise {
    * @return {*}
    */
   _changeState(newState, value) {
-    console.log("changeState");
+    // console.log("changeState");
     if (this._state !== PENDING) {
       // 目前状态已经更改
       return;
@@ -133,17 +169,35 @@ class MyPromise {
   }
 }
 
-const pro = new MyPromise((resolve, reject) => {
-  setTimeout(() => {
-    resolve(1);
-  });
-});
-pro.then(function A1() {});
-setTimeout(() => {
-  pro.then(function A2() {});
-});
+// ==============================调试区域===================================
 
-console.log(pro);
+// const pro = new MyPromise((resolve, reject) => {
+//   setTimeout(() => {
+//     resolve(1);
+//   });
+// });
+
+// const pro2 = pro.then((data) => {
+//   console.log(data);
+//   return new Promise((resolve, reject) => {
+//     resolve('a')
+//   })
+// });
+// setTimeout(() =>{
+//   console.log(pro2)
+// },50)
+
+// setTimeout(()=>{
+//   console.log(pro)
+//   console.log(pro2)  //状态一致了
+// },1500)
+// pro.then(function A1() {},function B2(){});
+
+// setTimeout(() => {
+//   pro.then(function A2() {
+//     console.log("A2");
+//   });
+// });
 
 // const pro1 = new Promise((resolve, reject) => {
 //   setTimeout(() => {
@@ -154,3 +208,34 @@ console.log(pro);
 // setTimeout(() => {
 //   pro1.then(function A2() {console.log('A2')});
 // });
+// ==============================调试区域===================================
+
+// ==============================测试区域===================================
+// 互操作 （用官方的Promise和我自己的MyPromis互相操作）
+// const pro1 = new MyPromise((resolve, reject)=>{
+//   resolve(1)
+// })
+// // pro1.then(data=>{
+// //   console.log('1') //1
+// // })
+// pro1.then(data=>{
+//   console.log(data)
+//   return new Promise((resolve)=>{
+//     resolve(2)
+//   })
+// }).then((data)=>{
+//   console.log(data)  //2
+// })
+
+// 互操作 async await
+function delay(duration) {
+  return new MyPromise(resolve=>{
+    setTimeout(resolve,duration)
+  })
+}
+(async function(){
+  console.log('start')
+  await delay(2000)
+  console.log('ok')
+})()
+// ==============================测试区域===================================
