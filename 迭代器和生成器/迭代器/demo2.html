@@ -1,0 +1,43 @@
+<!--
+ * @Author: luoxi
+ * @LastEditTime: 2022-01-08 18:07:34
+ * @LastEditors: your name
+ * @Description: 创建一个迭代器
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      /**
+       * @description: 创建一个迭代器
+       * @param {*Array} arr
+       * @return {*}
+       */
+      function createIterator(arr) {
+        let i = 0; //当前的数组下标
+        return {
+          next() {
+            var result = {
+              value: arr[i],
+              done: i >= arr.length,
+            };
+            i++;
+            return result;
+          },
+        };
+      }
+
+      const arr1 = [1, 2, 3, 4, 5];
+      const arr2 = [6, 7, 8];
+
+      const iter1 = createIterator(arr1);
+      const iter2 = createIterator(arr2);
+    </script>
+  </body>
+</html>

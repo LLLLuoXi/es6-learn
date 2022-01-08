@@ -1,0 +1,50 @@
+<!--
+ * @Author: luoxi
+ * @LastEditTime: 2022-01-08 18:22:01
+ * @LastEditors: your name
+ * @Description:  用迭代器一次得到斐波拉契数列前面n位的值 1 1 2 3 5 8 13.....
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <script>
+      // 当不确定到底用到第几位的时候，数组无法知道往里加多少数据，得用迭代器
+      /**
+       * @description: 创建一个斐波拉契数列的迭代器
+       * @return {Object*} feiboIterator
+       */
+      function createFeiboIterator() {
+        //当前记录的前1位和前2位
+        let prev1,
+          prev2,
+          //当前是第几位
+          n = 1;
+        return {
+          next() {
+            let value;
+            if (n <= 2) {
+              value = 1;
+            } else {
+              value = prev1 + prev2;
+            }
+            const result = {
+              value,
+              done: false,
+            };
+            prev2 = prev1;
+            prev1 = result.value;
+            n++;
+            return result;
+          },
+        };
+      }
+      const feiboIterator = createFeiboIterator();
+    </script>
+  </body>
+</html>
