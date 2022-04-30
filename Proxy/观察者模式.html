@@ -1,0 +1,57 @@
+<!--
+ * @Author: luoxi
+ * @LastEditTime: 2022-04-30 9:07:39
+ * @LastEditors: your name
+ * @Description: 
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="container">
+      <p>
+        <span>a</span>
+        <span>1</span>
+      </p>
+    </div>
+    <script>
+      // 有一个对象是观察者，它用于观察另一个对象的属性值变化，当属性值变化后会收到一个通知，可能会做一件事
+
+      // 创建一个观察者
+      function observer(target) {
+        const div = document.getElementById("container");
+        const ob = {};
+        const props = Object.keys(target);
+        for (const prop of props) {
+          Object.defineProperty(ob, prop, {
+            get() {
+              return target[prop];
+            },
+            set(val) {
+              target[prop] = val;
+              render();
+            },
+            enumerable: true,
+          });
+        }
+        render();
+        function render() {
+          let html = "";
+          for (const prop of Object.keys(ob)) {
+            html += `<p><span>${prop}：</span><span>${ob[prop]}</span></p>`;
+          }
+          div.innerHTML = html;
+        }
+        return ob;
+      }
+
+      const target = { a: 1, b: 2 };
+      const obj = new observer(target);
+    </script>
+  </body>
+</html>
