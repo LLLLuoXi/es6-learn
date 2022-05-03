@@ -1,0 +1,53 @@
+<!--
+ * @Author: luoxi
+ * @LastEditTime: 2022-05-03 22:59:21
+ * @LastEditors: your name
+ * @Description: Proxy实现可验证的函数参数
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proxy实现可验证的函数参数</title>
+  </head>
+  <body>
+    <script>
+      function sum(a, b) {
+        return a + b;
+      }
+
+      // function validatorFunction(func, ...types) {
+      //   return function (...arguments) {
+      //     types.forEach((t, i) => {
+      //       const arg = arguments[i];
+      //       if (typeof arg !== t) {
+      //         throw new TypeError(`第${i + 1}个参数${arg}类型错误`);
+      //       }
+      //     });
+      //     return func(...arguments);
+      //   };
+      // }
+
+      function validatorFunction(func, ...types) {
+        const proxy = new Proxy(func, {
+          apply(target, thisArg, arguments) {
+            types.forEach((t, i) => {
+              const arg = arguments[i];
+              if (typeof arg !== t) {
+                throw new TypeError(`第${i + 1}个参数${arg}类型错误`);
+              }
+            });
+            return Reflect.apply(target, thisArg, arguments);
+          },
+        });
+        return proxy;
+      }
+
+      const sumProxy = validatorFunction(sum, "number", "number");
+      // console.log(sumProxy("1", "2")); // 可验证的函数参数.html:39 Uncaught TypeError: 第1个参数1类型错误
+      console.log(sumProxy(1, 2));
+    </script>
+  </body>
+</html>
