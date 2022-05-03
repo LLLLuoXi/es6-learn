@@ -1,0 +1,50 @@
+<!--
+ * @Author: luoxi
+ * @LastEditTime: 2022-05-03 22:30:33
+ * @LastEditors: luoxi
+ * @Description: Proxy实现偷懒的构造函数
+-->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Proxy实现偷懒的构造函数</title>
+  </head>
+  <body>
+    <script>
+      class User {
+        // constructor(firstname, lastname, age) {
+        //   this.firstname = firstname;
+        //   this.lastname = lastname;
+        //   this.age = age;
+        // }
+      }
+
+      function ConstructorProxy(Class, ...propNames) {
+        return new Proxy(Class, {
+          // Class当成构造函数调用会被construct()捕获到
+          construct(target, argumentsList) {
+            // console.log('构造函数呗调用了');
+            const obj = Reflect.construct(target, argumentsList);
+            console.log("this", this);
+            propNames.forEach((name, i) => {
+              obj[name] = argumentsList[i];
+            });
+            return obj;
+          },
+        });
+      }
+
+      const UserProxy = new ConstructorProxy(
+        User,
+        "firstname",
+        "lastname",
+        "age"
+      );
+      const proxy = new UserProxy("luo", "xi", 10);
+      console.log("proxy", proxy);
+    </script>
+  </body>
+</html>
